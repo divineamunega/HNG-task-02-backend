@@ -1,10 +1,11 @@
 import express, { NextFunction, Request, Response } from "express";
 import authRouter from "./auth/authRouter";
 import morgan from "morgan";
+import errorController from "./error/errorController";
 
 const app = express();
 app.use(morgan("tiny"));
-
+app.use(express.json());
 // Authentication
 app.use("/auth", authRouter);
 
@@ -22,9 +23,6 @@ app.use("*", (req, res) => {
 });
 
 // Global Error Handler
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-	res.status(404).json({ status: "fail", data: err });
-	return 0;
-});
+app.use(errorController);
 
 export default app;
