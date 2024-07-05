@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
 import AsyncErrorHandler from "../error/asyncErrorHandler";
-import { validationResult } from "express-validator";
+import { matchedData, validationResult } from "express-validator";
 import { error } from "console";
+import AppError from "../error/appError";
+import readValidError from "../error/readValidError";
 
 const prisma = new PrismaClient();
 
@@ -25,9 +27,13 @@ const login = AsyncErrorHandler(async function (req: Request, res: Response) {
 const register = function (req: Request, res: Response, next: NextFunction) {
 	const result = validationResult(req);
 
-	if (result.isEmpty()) {
+	if (!result.isEmpty()) {
+		next(new AppError(readValidError(result.array()), 400));
 	}
-	res.status(400).json({ errors: result.array() });
+
+	const data = matchedData(req);
+
+	res.json(data);
 };
 
 export { login, register };

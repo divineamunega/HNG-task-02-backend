@@ -1,9 +1,15 @@
 import { Request, Response, NextFunction } from "express";
+import AppError from "./appError";
 export default function (
-	err: Error,
+	err: AppError,
 	req: Request,
 	res: Response,
 	next: NextFunction
 ) {
-	res.status(400).json({ data: err });
+	res.status(400).json({
+		data: {
+			status: err.status,
+			message: err.message,
+		},
+	});
 }
