@@ -13,6 +13,12 @@ function registerValidation() {
 		body("password")
 			.isLength({ min: 8 })
 			.withMessage("Password must be at least 8 characters long"),
+		body("phone")
+			.optional()
+			.isLength({
+				min: 10,
+			})
+			.withMessage("Thephonenumbermust begreater than 10 digits"),
 	];
 }
 

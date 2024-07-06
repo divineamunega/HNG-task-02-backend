@@ -1,16 +1,18 @@
 import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken";
+
 import AsyncErrorHandler from "../error/asyncErrorHandler";
 import { matchedData, validationResult } from "express-validator";
-import { error } from "console";
 import AppError from "../error/appError";
-import readValidError from "../error/readValidError";
+
+import asyncErrorHandler from "../error/asyncErrorHandler";
+import bcrypt from "bcrypt";
+import { signToken } from "../utils/jwt";
 
 const prisma = new PrismaClient();
 
 const login = AsyncErrorHandler(async function (req: Request, res: Response) {
-	console.log(req.body);
-
 	const newUser = await prisma.user.create({
 		data: {
 			firstName: "",
@@ -24,16 +26,42 @@ const login = AsyncErrorHandler(async function (req: Request, res: Response) {
 	res.status(200).json(newUser);
 });
 
-const register = function (req: Request, res: Response, next: NextFunction) {
+const register = asyncErrorHandler(async function (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
 	const result = validationResult(req);
-
 	if (!result.isEmpty()) {
-		next(new AppError(readValidError(result.array()), 400));
+		next(new AppError("Validation", 422, result.array()));
 	}
 
-	const data = matchedData(req);
+	const { firstName, lastName, email, password, phone } = matchedData(req);
+	const hashedPassword = await bcrypt.hash(password, 12);
 
-	res.json(data);
-};
+	const newUser = await prisma.user.create({
+		data: { firstName, lastName, email, password: hashedPassword, phone },
+	});
+	const accessToken = signToken(newUser.id);
+
+	await prisma.organisation.create({
+		data: { name: `${newUser.firstName}'s Organization`, description: "" },
+	});
+
+	res.status(201).json({
+		status: "success",
+		message: "Registration Successful",
+		data: {
+			accessToken,
+			user: {
+				userId: newUser.id,
+				firstName: newUser.firstName,
+				lastName: newUser.lastName,
+				email: newUser.email,
+				phone: newUser.phone === null ? undefined : newUser.phone,
+			},
+		},
+	});
+});
 
 export { login, register };
