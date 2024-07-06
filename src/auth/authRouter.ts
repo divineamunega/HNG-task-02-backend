@@ -1,9 +1,11 @@
 import { Router } from "express";
 import { login, register } from "./authController";
 import { registerValidation } from "../validation/registerValidation";
-import { body } from "express-validator";
+import loginValidation from "../validation/loginValidation";
 
 const router = Router();
 
-router.post("/register", registerValidation(), register).post("/login", login);
+router
+	.post("/register", registerValidation(), register)
+	.post("/login", loginValidation(), login);
 export default router;

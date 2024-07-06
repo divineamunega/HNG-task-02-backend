@@ -29,6 +29,14 @@ export default function (
 		});
 	}
 
+	if (err.statusCode === 401) {
+		res.status(401).json({
+			status: "Bad Request",
+			message: err.message,
+			statusCode: 401,
+		});
+	}
+
 	res.status(400).json({
 		nessage: err.message,
 	});

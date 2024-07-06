@@ -1,32 +1,56 @@
 import { Request, Response, NextFunction } from "express";
 import { PrismaClient } from "@prisma/client";
-import jwt from "jsonwebtoken";
 
 import AsyncErrorHandler from "../error/asyncErrorHandler";
 import { matchedData, validationResult } from "express-validator";
 import AppError from "../error/appError";
 
-import asyncErrorHandler from "../error/asyncErrorHandler";
 import bcrypt from "bcrypt";
 import { signToken } from "../utils/jwt";
 
 const prisma = new PrismaClient();
 
-const login = AsyncErrorHandler(async function (req: Request, res: Response) {
-	const newUser = await prisma.user.create({
-		data: {
-			firstName: "",
-			lastName: "hdhddh",
-			email: "dkddkd",
-			password: "djjd",
-			phone: "kewkek",
+const login = AsyncErrorHandler(async function (
+	req: Request,
+	res: Response,
+	next: NextFunction
+) {
+	const result = validationResult(req);
+	if (!result.isEmpty()) {
+		next(new AppError("Authentication Failed", 401, {}));
+	}
+
+	const { email, password } = matchedData(req);
+	const user = await prisma.user.findUnique({
+		where: {
+			email: email,
 		},
 	});
 
-	res.status(200).json(newUser);
+	if (!user) throw new AppError("Authentication Failed", 401, {});
+
+	const authenticated = await bcrypt.compare(password, user.password);
+	if (!authenticated) throw new AppError("Authentication Error", 401, {});
+
+	const accessToken = signToken(user.id);
+
+	res.status(200).json({
+		status: "success",
+		message: "Login Successful",
+		data: {
+			accessToken,
+			user: {
+				userId: user.id,
+				firstName: user.firstName,
+				lastName: user.lastName,
+				email: user.email,
+				phone: user.phone === null ? undefined : user.phone,
+			},
+		},
+	});
 });
 
-const register = asyncErrorHandler(async function (
+const register = AsyncErrorHandler(async function (
 	req: Request,
 	res: Response,
 	next: NextFunction
@@ -40,13 +64,25 @@ const register = asyncErrorHandler(async function (
 	const hashedPassword = await bcrypt.hash(password, 12);
 
 	const newUser = await prisma.user.create({
-		data: { firstName, lastName, email, password: hashedPassword, phone },
+		data: {
+			firstName,
+			lastName,
+			email,
+			password: hashedPassword,
+			phone,
+			organizations: {
+				create: {
+					organisation: {
+						create: {
+							name: `${firstName}'s Organization`,
+							description: `${firstName}'s default organization`,
+						},
+					},
+				},
+			},
+		},
 	});
 	const accessToken = signToken(newUser.id);
-
-	await prisma.organisation.create({
-		data: { name: `${newUser.firstName}'s Organization`, description: "" },
-	});
 
 	res.status(201).json({
 		status: "success",
