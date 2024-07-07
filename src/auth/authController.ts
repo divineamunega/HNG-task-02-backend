@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
-import { PrismaClient } from "@prisma/client";
+import prisma from "../prismaClient";
+import jwt from "jsonwebtoken";
 
 import AsyncErrorHandler from "../error/asyncErrorHandler";
 import { matchedData, validationResult } from "express-validator";
@@ -7,8 +8,18 @@ import AppError from "../error/appError";
 
 import bcrypt from "bcrypt";
 import { signToken } from "../utils/jwt";
+import { log } from "console";
+import { promisify } from "util";
 
-const prisma = new PrismaClient();
+interface JwtPayload {
+	id: string;
+}
+
+declare module "express-serve-static-core" {
+	interface Request {
+		user?: any;
+	}
+}
 
 const login = AsyncErrorHandler(async function (
 	req: Request,
@@ -100,4 +111,37 @@ const register = AsyncErrorHandler(async function (
 	});
 });
 
-export { login, register };
+const protect = AsyncErrorHandler(
+	async (req: Request, res: Response, next: NextFunction) => {
+		let token;
+		// 1) Get the token and check if it's there
+		if (req.headers.authorization?.startsWith("Bearer")) {
+			token = req.headers.authorization.split(" ")[1];
+		}
+
+		if (!token)
+			throw new AppError(
+				"You are not logged in. PLease Login to get access",
+				401,
+				{}
+			);
+
+		// 2) Verification token
+		const decoded = jwt.verify(
+			token,
+			process.env.JWT_SECRET!
+		) as unknown as JwtPayload;
+
+		// 3) Check if the user still exists
+		console.log(decoded);
+		const currentUser = await prisma.user.findUnique({
+			where: { id: decoded.id },
+		});
+
+		// Grant Access to protected route
+		req.user = currentUser;
+		next();
+	}
+);
+
+export { login, register, protect };

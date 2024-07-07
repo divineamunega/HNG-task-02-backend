@@ -37,7 +37,22 @@ export default function (
 		});
 	}
 
+	console.log(err);
+
+	if (err.name === "PrismaClientInitializationError") {
+		res.status(500).json({
+			message: "Somethig wet wrog o our ed",
+		});
+	}
+
+	if (err.name === "JsonWebTokenError") {
+		res.status(401).json({
+			status: "fail",
+			message: "You are not logged in. PLease Login to get access",
+		});
+	}
+
 	res.status(400).json({
-		nessage: err.message,
+		message: err,
 	});
 }
