@@ -19,6 +19,7 @@ router
 	.post(
 		"/:orgId/users",
 		body("userId").notEmpty().withMessage("userId cannot be empty"),
+		protect,
 		addUser
 	);
 export default router;

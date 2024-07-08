@@ -59,16 +59,43 @@ const addUser = AsyncErrorHandler(async function (
 
 	if (!user) next(new AppError(`No user found with id ${userId} `, 404, {}));
 
-	// Check weather org exists
-	const orgCount = await prisma.organisation.count({
+	// Check weather user is in  org
+	const org = await prisma.organisation.findUnique({
 		where: {
 			id: orgId,
 		},
 	});
 
-	if (orgCount === 0) {
+	if (!org) {
 		return next(
 			new AppError(`No organisation found with id ${orgId}`, 404, {})
+		);
+	}
+
+	const adminUser = await prisma.user.findUnique({
+		where: {
+			id: req.user.id,
+		},
+		include: { organizations: { include: { organisation: true } } },
+	});
+
+	if (!adminUser)
+		return next(new AppError("Please Login to Continue", 403, {}));
+
+	// Extract organizations from the user object
+	const organizations = adminUser.organizations.map(
+		(userOrg) => userOrg.organisation
+	);
+
+	// Check if user is in org
+	const isInOrg = organizations.find((org) => org.id === orgId);
+	if (!isInOrg) {
+		return next(
+			new AppError(
+				"Cannot add a user to an organisation you're not part of",
+				403,
+				{}
+			)
 		);
 	}
 
@@ -88,7 +115,7 @@ const addUser = AsyncErrorHandler(async function (
 
 	res.status(200).json({
 		status: "success",
-		message: `User with added to organization with id successfully`,
+		message: `User added to organization successfully`,
 	});
 });
 
