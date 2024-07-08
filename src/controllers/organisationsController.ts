@@ -144,7 +144,7 @@ const getOrganisationById = AsyncErrorHandler(async function (
 
 	if (!organizations) {
 		return next(
-			new AppError(`You're not a part of this organisation`, 404, {})
+			new AppError(`You're not a part of this organisation`, 403, {})
 		);
 	}
 

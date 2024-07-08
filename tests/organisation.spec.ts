@@ -1,23 +1,24 @@
 import request from "supertest";
 import app from "../src/app";
-import prisma from "../src/prismaClient";
-import { hash } from "bcrypt";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
+import { hash, compare } from "bcrypt";
 
 describe("Organization Access", () => {
 	beforeAll(async () => {
 		// Clean up the database
-		await prisma.user.deleteMany();
-		await prisma.organisation.deleteMany();
-	});
+		await prisma.$connect();
+		await prisma.userOrganization.deleteMany({});
+		await prisma.organisation.deleteMany({});
+		await prisma.user.deleteMany({});
+	}, 10000);
 
 	it("should not allow users to see data from organizations they do not belong to", async () => {
-		// Create two users and organizations
-		const hashedPassword = await hash("password", 12);
-
+		const password2 = await hash("password2", 12);
 		const user1 = await prisma.user.create({
 			data: {
 				email: "user1@example.com",
-				password: hashedPassword,
+				password: "password1",
 				firstName: "name1",
 				lastName: "lastname1",
 				organizations: {
@@ -36,7 +37,7 @@ describe("Organization Access", () => {
 		const user2 = await prisma.user.create({
 			data: {
 				email: "user2@example.com",
-				password: hashedPassword,
+				password: password2,
 				firstName: "name2",
 				lastName: "lastname2",
 				organizations: {
@@ -52,6 +53,8 @@ describe("Organization Access", () => {
 			},
 		});
 
+		if (!user2) throw new Error("No user 2");
+
 		const organization = await prisma.organisation.findFirst({
 			where: {
 				users: {
@@ -65,25 +68,26 @@ describe("Organization Access", () => {
 		// Log in user2 and try to access user1's organization data
 		const loginResponse = await request(app).post("/auth/login").send({
 			email: "user2@example.com",
-			password: "password",
+			password: "password2",
 		});
 
-		const token = loginResponse.body.token;
+		const token = loginResponse.body.data.accessToken;
 
 		const response = await request(app)
-			.get(`/organizations/${organization.id}`)
+			.get(`/api/organisations/${organization.id}`)
 			.set("Authorization", `Bearer ${token}`);
 
 		expect(response.status).toBe(403);
 		expect(response.body.message).toBe(
 			"You're not a part of this organisation"
 		);
-	});
+	}, 30000);
 
 	afterAll(async () => {
 		// Clean up the database
-		await prisma.user.deleteMany({});
+		await prisma.userOrganization.deleteMany({});
 		await prisma.organisation.deleteMany({});
+		await prisma.user.deleteMany({});
 		await prisma.$disconnect();
-	});
+	}, 10000);
 });

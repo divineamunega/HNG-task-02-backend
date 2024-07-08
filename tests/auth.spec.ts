@@ -12,16 +12,16 @@ describe("Auth Endpoints", () => {
 		});
 
 		expect(response.status).toBe(201);
-		expect(response.body.user).toHaveProperty("id");
-		expect(response.body.user).toHaveProperty("email", "john@example.com");
-		expect(response.body).toHaveProperty("token");
+		expect(response.body.data.user).toHaveProperty("userId");
+		expect(response.body.data.user).toHaveProperty("email", "john@example.com");
+		expect(response.body).toHaveProperty("data.accessToken");
 
 		const org = await prisma.organisation.findFirst({
-			where: { name: "John's Organization" },
+			where: { name: "John's Organisation" },
 		});
 
 		expect(org).not.toBeNull();
-	});
+	}, 20000);
 
 	it("should log the user in successfully", async () => {
 		// Register the user first
@@ -39,8 +39,8 @@ describe("Auth Endpoints", () => {
 		});
 
 		expect(response.status).toBe(200);
-		expect(response.body).toHaveProperty("token");
-	});
+		expect(response.body).toHaveProperty("data.accessToken");
+	}, 20000);
 
 	it("should fail if required fields are missing", async () => {
 		const response = await request(app).post("/auth/register").send({
@@ -72,6 +72,6 @@ describe("Auth Endpoints", () => {
 		});
 
 		expect(response.status).toBe(422);
-		expect(response.body.message).toBe("This email already exist");
-	});
+		expect(response.body.errors[0].message).toBe("This email already exist");
+	}, 20000);
 });

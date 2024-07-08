@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import prisma from "../prismaClient";
+import { Prisma, PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken";
 
 import AsyncErrorHandler from "../error/asyncErrorHandler";
@@ -8,8 +8,8 @@ import AppError from "../error/appError";
 
 import bcrypt from "bcrypt";
 import { signToken } from "../utils/jwt";
-import { log } from "console";
-import { promisify } from "util";
+
+const prisma = new PrismaClient();
 
 interface JwtPayload {
 	id: string;
@@ -85,8 +85,8 @@ const register = AsyncErrorHandler(async function (
 				create: {
 					organisation: {
 						create: {
-							name: `${firstName}'s Organization`,
-							description: `${firstName}'s default organization`,
+							name: `${firstName}'s Organisation`,
+							description: `${firstName}'s default organisation`,
 						},
 					},
 				},
