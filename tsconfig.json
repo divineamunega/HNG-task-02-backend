@@ -108,5 +108,6 @@
 
 	"include": ["src/**/*.ts"],
 	"outDir": "./dist",
-	"exclude": ["node_modules"]
+	"rootDir": "./src",
+	"exclude": ["node_modules", "**/*.spec.ts"]
 }
