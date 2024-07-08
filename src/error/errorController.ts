@@ -37,12 +37,6 @@ export default function (
 		});
 	}
 
-	if (err.name === "PrismaClientInitializationError") {
-		res.status(500).json({
-			message: "Somethig wet wrog o our ed",
-		});
-	}
-
 	if (err.name === "JsonWebTokenError") {
 		res.status(401).json({
 			status: "fail",
@@ -63,7 +57,8 @@ export default function (
 			message: err.message,
 		});
 	}
-	res.status(400).json({
-		message: err,
+
+	res.status(500).json({
+		message: "Something went wrong on our end.",
 	});
 }
