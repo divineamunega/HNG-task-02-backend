@@ -1,7 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import prisma from "../prismaClient";
 import { matchedData, validationResult } from "express-validator";
-import { log } from "console";
 import AsyncErrorHandler from "../error/asyncErrorHandler";
 import AppError from "../error/appError";
 

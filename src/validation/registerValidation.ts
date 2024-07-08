@@ -11,14 +11,9 @@ function registerValidation() {
 			.withMessage("Invalid email address")
 			.normalizeEmail(),
 		body("password")
-			.isLength({ min: 8 })
-			.withMessage("Password must be at least 8 characters long"),
-		body("phone")
-			.optional()
-			.isLength({
-				min: 10,
-			})
-			.withMessage("Thephonenumbermust begreater than 10 digits"),
+			.notEmpty()
+			.withMessage("Password is required!"),
+		body("phone").optional(),
 	];
 }
 
