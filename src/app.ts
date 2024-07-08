@@ -17,7 +17,7 @@ app.use("/api/users", UserRoutes);
 app.use("*", (req, res) => {
 	res.status(404).json({
 		status: "fail",
-		message: `The route ${req.originalUrl} with the ${req.method} method is not available on this api.`,
+		message: `The ${req.method} method is not avalaible on this route "${req.originalUrl}"`,
 	});
 });
 
