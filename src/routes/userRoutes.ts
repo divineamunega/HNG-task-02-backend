@@ -5,5 +5,5 @@ import createOrganisationValidation from "../validation/createOrganisationValida
 
 const router = Router();
 
-router.get("/users/:id", protect, getUserFromOrganisation);
+router.get("/:id", protect, getUserFromOrganisation);
 export default router;

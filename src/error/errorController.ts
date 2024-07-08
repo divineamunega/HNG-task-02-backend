@@ -46,7 +46,14 @@ export default function (
 	if (err.name === "JsonWebTokenError") {
 		res.status(401).json({
 			status: "fail",
-			message: "You are not logged in. PLease Login to get access",
+			message: "Could not log you in with that token. Login to get another",
+		});
+	}
+
+	if (err.statusCode === 404) {
+		res.status(404).json({
+			status: "fail",
+			message: err.message,
 		});
 	}
 

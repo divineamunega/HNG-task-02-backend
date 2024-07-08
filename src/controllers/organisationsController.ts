@@ -126,6 +126,7 @@ const getOrganisationById = AsyncErrorHandler(async function (
 	next: NextFunction
 ) {
 	const userId = req.user.id;
+	const orgId = req.params.orgId;
 
 	const user = await prisma.user.findUnique({
 		where: { id: userId },
@@ -137,8 +138,24 @@ const getOrganisationById = AsyncErrorHandler(async function (
 	}
 
 	// Extract organizations from the user object
-	const organizations = user.organizations.map(
-		(userOrg) => userOrg.organisation
+	const organizations = user.organizations.find(
+		(userOrg) => userOrg.organisation.id === orgId
 	);
+
+	if (!organizations) {
+		return next(
+			new AppError(`You're not a part of any org with id ${orgId}`, 404, {})
+		);
+	}
+
+	res.status(200).json({
+		status: "success",
+		message: "Data gotten successfully",
+		data: {
+			orgId: organizations.organisation.id,
+			name: organizations.organisation.name,
+			description: organizations.organisation.description,
+		},
+	});
 });
 export { createOrganisation, addUser, getAllOrgnisations, getOrganisationById };

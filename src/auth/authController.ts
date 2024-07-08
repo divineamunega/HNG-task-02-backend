@@ -121,7 +121,7 @@ const protect = AsyncErrorHandler(
 
 		if (!token)
 			throw new AppError(
-				"You are not logged in. PLease Login to get access",
+				"You are not logged in. Please Login to get access",
 				401,
 				{}
 			);
@@ -139,7 +139,7 @@ const protect = AsyncErrorHandler(
 		if (!currentUser)
 			next(
 				new AppError(
-					"You are not logged in. PLease Login to get access",
+					"You are not logged in. Please Login to get access",
 					401,
 					{}
 				)
