@@ -132,11 +132,18 @@ const protect = AsyncErrorHandler(
 			process.env.JWT_SECRET!
 		) as unknown as JwtPayload;
 
-		// 3) Check if the user still exists
-		console.log(decoded);
 		const currentUser = await prisma.user.findUnique({
 			where: { id: decoded.id },
 		});
+
+		if (!currentUser)
+			next(
+				new AppError(
+					"You are not logged in. PLease Login to get access",
+					401,
+					{}
+				)
+			);
 
 		// Grant Access to protected route
 		req.user = currentUser;

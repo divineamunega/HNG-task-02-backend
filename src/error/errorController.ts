@@ -37,8 +37,6 @@ export default function (
 		});
 	}
 
-	console.log(err);
-
 	if (err.name === "PrismaClientInitializationError") {
 		res.status(500).json({
 			message: "Somethig wet wrog o our ed",
@@ -52,6 +50,12 @@ export default function (
 		});
 	}
 
+	if (err.isOperational) {
+		res.status(err.statusCode).json({
+			status: "Bad Request",
+			message: err.message,
+		});
+	}
 	res.status(400).json({
 		message: err,
 	});
