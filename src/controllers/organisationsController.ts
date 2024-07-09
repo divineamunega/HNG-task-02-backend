@@ -142,7 +142,7 @@ const getAllOrgnisations = AsyncErrorHandler(async function (
 	res.status(200).json({
 		staus: "success",
 		message: "Organisation  Gotten  successfully",
-		data: { organizations },
+		data: { organisations: organizations },
 	});
 });
 
